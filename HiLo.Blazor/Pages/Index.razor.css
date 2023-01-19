@@ -1,0 +1,6 @@
+﻿#buttons {
+    display: flex;
+    justify-content: space-evenly;
+    font-size: 1.4rem;
+    flex-wrap: wrap;
+}

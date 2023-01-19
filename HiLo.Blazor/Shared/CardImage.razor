@@ -1,0 +1,8 @@
+﻿<img src="@ImageSrc" id="@ImageId" class="playing-card" alt="@AltText">
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Parameter] public Card? Card { get; set; }
+    private string AltText => Card?.ToString() ?? "Card";
+    private string ImageId => "playing-card-image-" + Id.ToString();
+    private string ImageSrc => $"images/cards/" + (Card == null ? "card-back.svg" : Card.GetImageName());
+}

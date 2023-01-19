@@ -1,0 +1,13 @@
+﻿.modal {
+    display: block;
+    background-color: rgba(10,10,10,.1);
+}
+.modal-content {
+    background-color: rgba(0, 0, 0, 0.8);
+    max-width: 40rem;
+    padding: 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 0 1.8rem 0.2rem rgba(0, 0, 0, 0.8);
+    font-size: 1.2rem;
+    color: white;
+}

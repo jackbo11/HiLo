@@ -1,0 +1,41 @@
+﻿<div class="container">
+    <h1>Welcome to the higher or lower game!</h1>
+    <p>To begin, enter your names below.</p>
+    <EditForm Model="@Model">
+        <div class="form-item">
+            <label class="hidden" for="player1">Player 1 Name</label>
+            <InputText @bind-Value="Model.Player1Name" DisplayName="Player 1 Name" id="player1" placeholder="Player 1" class="text-box" />
+        </div>
+        <div class="form-item">
+            <label class="hidden" for="player2">Player 2 Name</label>
+            <InputText @bind-Value="Model.Player2Name" DisplayName="Player 2 Name" id="player2" placeholder="Player 2" class="text-box" />
+        </div>
+        <div class="form-item">
+            <label>Number of rounds: </label>
+            <InputRadioGroup Name="NumberOfRounds" @bind-Value="Model.NumberOfRounds">
+                @foreach (int i in Model.AvailableNumberOfRounds)
+                {
+                    <InputRadio id=i Value=i />
+                    <label class="radio-label" for="@i">@i</label>
+                }
+          </InputRadioGroup>
+      </div>
+    </EditForm>
+    <div class="form-item" style="margin-bottom: 0;">
+        <button type="button" @onclick="OnOkay">Play!</button>
+        <ion-icon name="swap-horizontal-outline"></ion-icon>
+    </div>
+</div>
+
+@code {
+    [Parameter] public NewGameModel? Model { get; set; }
+    [Parameter] public EventCallback OnOkay { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Model is null)
+        {
+            Model = new();   
+        }
+    }
+}

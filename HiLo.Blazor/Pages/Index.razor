@@ -1,0 +1,154 @@
+﻿@page "/"
+<PageTitle>HiLo</PageTitle>
+
+@if (ShowingNewGameDialog)
+{
+    <NewGame Model="@NewGameModel" OnOkay="StartNewGame" />
+}
+else
+{
+    <GameStatus Model="@GameStatusModel" />
+    <div id="cards" @ref="cards">
+        <CardImage Id="1" Card="@drawnCards[0]" />    
+        <CardImage Id="2" Card="@drawnCards[1]" />
+        <CardImage Id="3" Card="@drawnCards[2]" />
+        <CardImage Id="4" Card="@drawnCards[3]" />
+        <CardImage Id="5" Card="@drawnCards[4]" />
+        <CardImage Id="6" Card="@drawnCards[5]" />
+        <CardImage Id="7" Card="@drawnCards[6]" />
+        <CardImage Id="8" Card="@drawnCards[7]" />
+        <CardImage Id="9" Card="@drawnCards[8]" />
+        <CardImage Id="10" Card="@drawnCards[9]" />
+        <CardImage Id="11" Card="@drawnCards[10]" />
+        <CardImage Id="12" Card="@drawnCards[11]" />
+    </div>
+    <div id="buttons">
+        <button type="button" @onclick="OpenNewGameDialog">New Game</button>
+        <button type="button" @onclick="Higher">Higher</button>
+        <button type="button" @onclick="Lower">Lower</button>
+        <button type="button" @onclick="Swap" disabled="@CannotSwapCard">Swap</button>
+        <a class="button" href="help">Help &amp; Rules</a>
+    </div>
+}
+@if (ShowingMessageDialog)
+{
+    <MessageDialog Message="@MessageText" Title="@MessageTitle" OnOkay="CloseMessageDialog" />
+}
+@code {
+    private bool ShowingNewGameDialog;
+    private NewGameModel NewGameModel = new NewGameModel{Player1Name = "Player 1", Player2Name = "Player 2", NumberOfRounds = 1};
+    private bool ShowingMessageDialog;
+    private string MessageTitle = string.Empty;
+    private string MessageText = string.Empty;
+    private Game? game;
+    private Card[] drawnCards = new Card[12];
+    private bool CannotSwapCard = true;
+    private GameStatusModel GameStatusModel = new GameStatusModel { CurrentPlayer = new Player("none"), CurrentRound = 0, TotalRounds = 0, Players = new Player[] { new Player("Player 1", 0), new Player("Player 2", 0) } };
+    private ElementReference cards;
+    private MessageType messageType;
+    private enum MessageType
+    {
+        General,
+        PlayerSwap,
+        GameWon
+    }
+
+    protected override void OnInitialized()
+    {
+        OpenNewGameDialog();
+    }
+
+    private void StartNewGame()
+    {
+        ResetCardImages();
+        Player[] players = { new Player(NewGameModel.Player1Name), new Player(NewGameModel.Player2Name) };
+        game = new Game(players[0], players[1], NewGameModel.NumberOfRounds);
+        GameStatusModel.CurrentRound = game?.RoundCount ?? 1;
+        GameStatusModel.Players = players;
+        GameStatusModel.TotalRounds = NewGameModel.NumberOfRounds;
+        CloseNewGameDialog();
+        HandleGameState(game?.StartRound());
+
+    }
+
+    private void OpenNewGameDialog()
+    {
+        ShowingNewGameDialog = true;
+    }
+
+    private void CloseNewGameDialog()
+    {
+        ShowingNewGameDialog = false;
+    }
+
+    private void OpenMessageDialog(string messageText, string messageTitle = "Message", MessageType messageType = MessageType.General)
+    {
+        MessageText = messageText;
+        MessageTitle = messageTitle;
+        this.messageType = messageType;
+        ShowingMessageDialog = true;
+    }
+
+    private void CloseMessageDialog()
+    {
+        ShowingMessageDialog = false;
+        if (messageType == MessageType.GameWon)
+        {
+            ResetCardImages();
+            if (game != null && !game.GameOver)
+            {
+                HandleGameState(game?.StartRound());
+                GameStatusModel.CurrentRound = game?.RoundCount?? 1;
+            }
+            else
+            {
+                OpenMessageDialog($"Congratulations! {game?.WinningPlayer?.Name} has won the game with a score of {game?.WinningPlayer?.RoundsWon}", "Game over");
+            }
+        }
+    }
+
+    private void HandleGameState(GameState? gs)
+    {
+        if (gs is not null)
+        {
+            if (gs.NewCard is not null)
+            {
+                drawnCards[gs.RoundPosition - 1] = gs.NewCard;
+            }
+            CannotSwapCard = !gs.CanSwapCard;
+            if (gs.CurrentPlayer is not null)
+            {
+                GameStatusModel.CurrentPlayer = gs.CurrentPlayer;
+                if (gs.HasPlayerSwapped)
+                {
+                    OpenMessageDialog($"Swap Player! It is now {gs.CurrentPlayer.Name}'s turn.", "Swap Player", MessageType.PlayerSwap);
+                }
+                if (gs.IsGameWon)
+                {
+                    OpenMessageDialog($"Congratulations! {gs.CurrentPlayer.Name} wins this round", "Round over", MessageType.GameWon);
+                }
+            }
+        }
+    }
+
+    private void ResetCardImages()
+    {
+        Array.Fill(drawnCards, null);
+    }
+
+    private void Higher()
+    {
+        HandleGameState(game?.Higher());
+    }
+
+    private void Lower()
+    {
+        HandleGameState(game?.Lower());
+    }
+
+    private void Swap()
+    {
+        HandleGameState(game?.Swap());
+    }
+
+}
