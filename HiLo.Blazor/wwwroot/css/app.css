@@ -5,6 +5,8 @@
 
 html, body {
     font-family: var(--system-ui);
+    background: radial-gradient(circle, rgb(0,120,0) 0%, rgb(0,193,0) 100%);
+    color: white;
 }
 
 h1:focus {
@@ -19,10 +21,6 @@ a, .btn-link {
     color: #fff;
     background-color: #1b6ec2;
     border-color: #1861ac;
-}
-
-.content {
-    padding-top: 1.1rem;
 }
 
 .valid.modified:not([type=checkbox]) {
@@ -68,6 +66,8 @@ a, .btn-link {
 
 div#cards {
     display: grid;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 
 #playing-card-image-1 {

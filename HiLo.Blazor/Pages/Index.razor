@@ -63,11 +63,12 @@ else
         ResetCardImages();
         Player[] players = { new Player(NewGameModel.Player1Name), new Player(NewGameModel.Player2Name) };
         game = new Game(players[0], players[1], NewGameModel.NumberOfRounds);
+        GameState? gs = game?.StartRound();
         GameStatusModel.CurrentRound = game?.RoundCount ?? 1;
         GameStatusModel.Players = players;
         GameStatusModel.TotalRounds = NewGameModel.NumberOfRounds;
         CloseNewGameDialog();
-        HandleGameState(game?.StartRound());
+        HandleGameState(gs);
 
     }
 
