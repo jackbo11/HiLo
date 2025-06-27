@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HiLo.Blazor", "HiLo.Blazor\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HiLo.UnitTests", "HiLo.UnitTests\HiLo.UnitTests.csproj", "{2D59BC7C-94BC-4BC0-BCD5-CFF0C1F707C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HiLo.DTOs", "HiLo.DTOs\HiLo.DTOs.csproj", "{8CF4F275-C4A1-44BA-8722-14746010464E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hilo.Server", "Hilo.Server\Hilo.Server.csproj", "{3FB921B8-9755-434A-AAAC-09AE839D8567}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{2D59BC7C-94BC-4BC0-BCD5-CFF0C1F707C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D59BC7C-94BC-4BC0-BCD5-CFF0C1F707C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D59BC7C-94BC-4BC0-BCD5-CFF0C1F707C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CF4F275-C4A1-44BA-8722-14746010464E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CF4F275-C4A1-44BA-8722-14746010464E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CF4F275-C4A1-44BA-8722-14746010464E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CF4F275-C4A1-44BA-8722-14746010464E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FB921B8-9755-434A-AAAC-09AE839D8567}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FB921B8-9755-434A-AAAC-09AE839D8567}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FB921B8-9755-434A-AAAC-09AE839D8567}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FB921B8-9755-434A-AAAC-09AE839D8567}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

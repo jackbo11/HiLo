@@ -7,6 +7,7 @@ namespace HiLo.Blazor.Models
         public int CurrentRound { get; set; }
         public int TotalRounds { get; set; }
         public Player CurrentPlayer { get; set; }
-        public Player[] Players { get; set; } 
+        public Player[] Players { get; set; }
+        public string? GameKey { get; set; }
     }
 }

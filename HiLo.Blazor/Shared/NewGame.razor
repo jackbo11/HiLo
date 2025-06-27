@@ -1,35 +1,99 @@
 ﻿<div class="container">
     <h1>Welcome to the higher or lower game!</h1>
-    <p>To begin, enter your names below.</p>
     <EditForm Model="@Model">
-        <div class="form-item">
-            <label class="hidden" for="player1">Player 1 Name</label>
-            <InputText @bind-Value="Model.Player1Name" DisplayName="Player 1 Name" id="player1" placeholder="Player 1" class="text-box" />
+        <div class="subcontainer">
+            <h2 class ="form-item">Your name</h2>
+            <div class="form-item">
+                <label class="hidden" for="player1">Player 1 Name</label>
+                <InputText @bind-Value="Model.Player1Name" DisplayName="Player 1 Name" id="player1" placeholder="Player 1" class="text-box" />
+            </div>
         </div>
-        <div class="form-item">
-            <label class="hidden" for="player2">Player 2 Name</label>
-            <InputText @bind-Value="Model.Player2Name" DisplayName="Player 2 Name" id="player2" placeholder="Player 2" class="text-box" />
-        </div>
-        <div class="form-item">
-            <label>Number of rounds: </label>
-            <InputRadioGroup Name="NumberOfRounds" @bind-Value="Model.NumberOfRounds">
-                @foreach (int i in Model.AvailableNumberOfRounds)
+        <hr />
+        <div class="subcontainer">
+            <h2 class="form-item">Online play</h2>
+
+            @if (Model.RemotePlayAvailable)
+            {
+
+
+                <div class ="form-item">
+                    <InputText @bind-Value="Model.GameKey" id="gameKey" DisplayName="Game Code" placeholder="Game code" class="text-box"></InputText>
+
+                </div>
+                <div class="form-item">
+                    <label>Number of rounds: </label>
+                    @foreach (int i in Model.AvailableNumberOfRounds) {
+                        <div>
+                            <input type="radio" name="RemoteNumberOfRounds" id="@i" value="@i"
+                            @onchange="RadioSelection"
+                            checked=@(Model.RemoteNumberOfRounds == i) />
+                            <label class="radio-label" for="@i">@i</label>
+                        </div>
+                    }
+                </div>
+                @if (Model.OnlinePlayers is not null)
                 {
-                    <InputRadio id=i Value=i />
-                    <label class="radio-label" for="@i">@i</label>
+                    <div class="subcontainer">
+                        <h3>Players</h3>
+                        <ul>
+                            @foreach(string player in Model.OnlinePlayers){
+                                <li>@player</li>
+                            }
+                        </ul>
+                    </div>
                 }
-          </InputRadioGroup>
-      </div>
+                <div class="subcontainer" style="flex-direction: row;">
+                    <div class="form-item">
+
+                        <button type="button" @onclick="OnNewGameKey">New room</button>
+                    </div>
+                    <div class="form-item">
+                        <button type="button" @onclick="OnJoin">Join room</button>
+                    </div>
+                    @if ((Model?.OnlinePlayers?.Length ?? 0) == 2)
+                    {
+                        <div class="form-item">
+                            <button type="button" @onclick="OnRemoteStart">Start game</button>
+                        </div>
+                    }
+                </div>
+            } else {
+                <p class="form-item">Online play is currently unavailable</p>
+            }
+        </div>
+        <hr />
+        <div class="subcontainer">
+            <h2 class="form-item">Local play</h2>
+            <div class="form-item">
+                <label class="hidden" for="player2">Player 2 Name</label>
+                <InputText @bind-Value="Model.Player2Name" DisplayName="Player 2 Name" id="player2" placeholder="Player 2" class="text-box" />
+            </div>
+            <div class="form-item">
+                <label>Number of rounds: </label>
+                <InputRadioGroup Name="NumberOfRounds" @bind-Value="Model.NumberOfRounds">
+                    @foreach (int i in Model.AvailableNumberOfRounds)
+                    {
+                        <InputRadio id=i Value=i />
+                        <label class="radio-label" for="@i">@i</label>
+                    }
+                </InputRadioGroup>
+            </div>
+            <div class="form-item" style="margin-bottom: 0;">
+                <button type="button" @onclick="OnOkay">Single Player</button>
+                <ion-icon name="swap-horizontal-outline"></ion-icon>
+            </div>
+        </div>
     </EditForm>
-    <div class="form-item" style="margin-bottom: 0;">
-        <button type="button" @onclick="OnOkay">Play!</button>
-        <ion-icon name="swap-horizontal-outline"></ion-icon>
-    </div>
+
 </div>
 
 @code {
     [Parameter] public NewGameModel? Model { get; set; }
     [Parameter] public EventCallback OnOkay { get; set; }
+    [Parameter] public EventCallback OnNewGameKey { get; set; }
+    [Parameter] public EventCallback OnJoin { get; set; }
+    [Parameter] public EventCallback OnRemoteStart { get; set; }
+    [Parameter] public EventCallback OnRemoteRoundsChanged { get; set; }
 
     protected override void OnInitialized()
     {
@@ -38,4 +102,12 @@
             Model = new();   
         }
     }
+
+    private void RadioSelection(ChangeEventArgs args)
+    {
+        Model.RemoteNumberOfRounds = Convert.ToInt32(args.Value);
+        OnRemoteRoundsChanged.InvokeAsync(Model.RemoteNumberOfRounds);
+
+    }
+}
 }

@@ -1,26 +1,21 @@
 ﻿@page "/"
+@using HiLo.DTOs
+@using Microsoft.AspNetCore.SignalR.Client;
+@inject IConfiguration Configuration
 <PageTitle>HiLo</PageTitle>
 
 @if (ShowingNewGameDialog)
 {
-    <NewGame Model="@NewGameModel" OnOkay="StartNewGame" />
+    <NewGame Model="@NewGameModel" OnOkay="StartNewGame" OnJoin="JoinGame" OnNewGameKey="RequestNewGameKey" OnRemoteStart="RemoteStartNewGame" OnRemoteRoundsChanged="(resp) => UpdateRemoteRounds((int) resp)" />
 }
 else
 {
     <GameStatus Model="@GameStatusModel" />
     <div id="cards" @ref="cards">
-        <CardImage Id="1" Card="@drawnCards[0]" />    
-        <CardImage Id="2" Card="@drawnCards[1]" />
-        <CardImage Id="3" Card="@drawnCards[2]" />
-        <CardImage Id="4" Card="@drawnCards[3]" />
-        <CardImage Id="5" Card="@drawnCards[4]" />
-        <CardImage Id="6" Card="@drawnCards[5]" />
-        <CardImage Id="7" Card="@drawnCards[6]" />
-        <CardImage Id="8" Card="@drawnCards[7]" />
-        <CardImage Id="9" Card="@drawnCards[8]" />
-        <CardImage Id="10" Card="@drawnCards[9]" />
-        <CardImage Id="11" Card="@drawnCards[10]" />
-        <CardImage Id="12" Card="@drawnCards[11]" />
+        @for (int i = 1; i <= 12; i++)
+        {
+            <CardImage Id="i" Card="@drawnCards[i -1]" />
+        }
     </div>
     <div id="buttons">
         <button type="button" @onclick="OpenNewGameDialog">New Game</button>
@@ -40,9 +35,10 @@ else
     private bool ShowingMessageDialog;
     private string MessageTitle = string.Empty;
     private string MessageText = string.Empty;
-    private Game? game;
+    private Game? localGame;
     private Card[] drawnCards = new Card[12];
     private bool CannotSwapCard = true;
+    private Player? RemoteWinningPlayer = null;
     private GameStatusModel GameStatusModel = new GameStatusModel { CurrentPlayer = new Player("none"), CurrentRound = 0, TotalRounds = 0, Players = new Player[] { new Player("Player 1", 0), new Player("Player 2", 0) } };
     private ElementReference cards;
     private MessageType messageType;
@@ -52,19 +48,46 @@ else
         PlayerSwap,
         GameWon
     }
+    private HubConnection connection;
+    private bool remoteGame = false;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         OpenNewGameDialog();
+        await InitSignalRClient();
+    }
+
+    private async Task JoinGame()
+    {
+        await connection.SendAsync("JoinGame", new JoinGameRequest(NewGameModel.Player1Name, NewGameModel.GameKey));
+
+    }
+
+    private async Task RequestNewGameKey()
+    {
+        await connection.SendAsync("NewGame", new NewGameRequest(NewGameModel.Player1Name));
+
+    }
+
+    public async Task RemoteStartNewGame()
+    {
+        RemoteWinningPlayer = null;
+        await connection.SendAsync("StartGame");
+    }
+
+    private async Task UpdateRemoteRounds(int numberOfRounds)
+    {
+        await connection.SendAsync("UpdateRounds", new UpdateRoundsRequest(numberOfRounds));
     }
 
     private void StartNewGame()
     {
+        remoteGame = false;
         ResetCardImages();
         Player[] players = { new Player(NewGameModel.Player1Name), new Player(NewGameModel.Player2Name) };
-        game = new Game(players[0], players[1], NewGameModel.NumberOfRounds);
-        GameState? gs = game?.StartRound();
-        GameStatusModel.CurrentRound = game?.RoundCount ?? 1;
+        localGame = new Game(players[0], players[1], NewGameModel.NumberOfRounds);
+        GameState? gs = localGame?.StartRound();
+        GameStatusModel.CurrentRound = localGame?.RoundCount ?? 1;
         GameStatusModel.Players = players;
         GameStatusModel.TotalRounds = NewGameModel.NumberOfRounds;
         CloseNewGameDialog();
@@ -90,23 +113,34 @@ else
         ShowingMessageDialog = true;
     }
 
-    private void CloseMessageDialog()
+    private async Task CloseMessageDialog()
     {
         ShowingMessageDialog = false;
         if (messageType == MessageType.GameWon)
         {
             ResetCardImages();
-            if (game != null && !game.GameOver)
+            if (remoteGame && RemoteWinningPlayer is null)
             {
-                HandleGameState(game?.StartRound());
-                GameStatusModel.CurrentRound = game?.RoundCount?? 1;
-            }
+                await SendSignalRStartRound();
+            } 
             else
             {
-                OpenMessageDialog($"Congratulations! {game?.WinningPlayer?.Name} has won the game with a score of {game?.WinningPlayer?.RoundsWon}", "Game over");
+                if (localGame != null && !localGame.GameOver)
+                {
+                    HandleGameState(localGame?.StartRound());
+                    GameStatusModel.CurrentRound = localGame?.RoundCount ?? 1;
+                }
+                else
+                {
+                    string name = remoteGame ? RemoteWinningPlayer?.Name! : localGame?.WinningPlayer?.Name!;
+                    int roundsWon = remoteGame ? RemoteWinningPlayer?.RoundsWon ?? 0 : localGame?.WinningPlayer?.RoundsWon ?? 0;
+                    OpenMessageDialog(WinMessage(name, roundsWon), "Game over");
+                }
             }
         }
     }
+
+    private string WinMessage(string name, int roundsWon) => $"Congratulations! {name} has won the game with a score of {roundsWon}";
 
     private void HandleGameState(GameState? gs)
     {
@@ -137,19 +171,112 @@ else
         Array.Fill(drawnCards, null);
     }
 
-    private void Higher()
+    private async Task Higher()
     {
-        HandleGameState(game?.Higher());
+        if (remoteGame)
+        {
+            await SendSignalRGameProgress(Core.Action.Higher);
+        } else {
+            HandleGameState(localGame?.Higher());
+        }
     }
 
-    private void Lower()
+    private async Task Lower()
     {
-        HandleGameState(game?.Lower());
+        if (remoteGame)
+        {
+            await SendSignalRGameProgress(Core.Action.Lower);
+        } else {
+            HandleGameState(localGame?.Lower());
+        }
     }
 
-    private void Swap()
+    private async Task Swap()
     {
-        HandleGameState(game?.Swap());
+        if (remoteGame)
+        {
+            await SendSignalRGameProgress(Core.Action.Swap);
+
+        } else {
+            HandleGameState(localGame?.Swap());
+        }
     }
 
+    private async Task SendSignalRGameProgress(Core.Action action){
+        await connection.InvokeAsync("ProgressGame", new ProgressGameRequest(action));
+    }
+
+    private async Task SendSignalRStartRound()
+    {
+        await connection.InvokeAsync("StartRound");
+    }
+
+    private async Task InitSignalRClient(){
+        connection = new HubConnectionBuilder()
+        .WithUrl(Configuration["GameHubUrl"])
+        .Build();
+
+
+        connection.On<StartGameResponse>("GameStarted", async (response) =>
+        {
+            remoteGame = true;
+            CloseNewGameDialog();
+            GameStatusModel.GameKey = response.gameKey;
+            GameStatusModel.TotalRounds = response.numberOfRounds;
+
+            await InvokeAsync(StateHasChanged);
+        });
+
+        connection.On<UpdateRoundsResponse>("RoundsUpdated", async (response) =>
+        {
+            NewGameModel.RemoteNumberOfRounds = response.numberOfRounds;
+            await InvokeAsync(StateHasChanged);
+
+        });
+
+        connection.On<StartRoundResponse>("RoundStarted", async (response) =>
+        {
+            ShowingMessageDialog = false;
+            ResetCardImages();
+            GameStatusModel.CurrentRound = response.currentRound;
+            GameStatusModel.Players = response.players;
+            await InvokeAsync(StateHasChanged);
+
+        });
+
+        connection.On<GameDetailsResponse>("GameDetails", async (response) =>
+        {
+            NewGameModel.GameKey = response.gameKey;
+            NewGameModel.OnlinePlayers = response.players;
+            NewGameModel.RemoteNumberOfRounds = response.numberOfRounds;
+            await InvokeAsync(StateHasChanged);
+
+        });
+
+        connection.On<ProgressGameResponse>("GameProgressed", async (response) =>
+        {
+
+            HandleGameState(response.gameState);
+            await InvokeAsync(StateHasChanged);
+            if (response.gameState.IsGameWon)
+            {
+                OpenMessageDialog($"Congratulations! {response.gameState.CurrentPlayer.Name} wins this round", "Round over", MessageType.GameWon);
+
+            }
+        });
+        connection.On<GameWonResponse>("GameWon", async (response) =>
+        {
+            RemoteWinningPlayer = response.winningPlayer;
+        });
+        if (bool.Parse(Configuration["EnableRemotePlay"] ?? "false"))
+            try
+            {
+                await connection.StartAsync();
+                NewGameModel.RemotePlayAvailable = true;
+            } catch (Exception ex) {
+                NewGameModel.RemotePlayAvailable = false;
+            }
+        }
+
+    }
 }

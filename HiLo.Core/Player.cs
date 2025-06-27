@@ -2,7 +2,7 @@
 {
     public class Player
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
         public int RoundsWon { get; set; }
         public Player() : this("Player")
         {

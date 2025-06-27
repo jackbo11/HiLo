@@ -1,5 +1,6 @@
 ﻿<div id="gameStatus">
     <span id="round">Round: @Model.CurrentRound/@Model.TotalRounds</span>
+    @if (!string.IsNullOrEmpty(Model.GameKey)) { <span id="gameKey">🔌@Model.GameKey</span> }
     <span id="currentPlayerSection">Current player: @Model.CurrentPlayer.Name</span>
     <span id="playerScore">@Model.Players[0].Name: @Model.Players[0].RoundsWon | @Model.Players[1].Name: @Model.Players[1].RoundsWon</span>
 </div>
