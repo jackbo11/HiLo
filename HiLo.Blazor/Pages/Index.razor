@@ -211,7 +211,8 @@ else
         await connection.InvokeAsync("StartRound");
     }
 
-    private async Task InitSignalRClient(){
+    private async Task InitSignalRClient()
+    {
         connection = new HubConnectionBuilder()
         .WithUrl(Configuration["GameHubUrl"])
         .Build();
@@ -269,14 +270,16 @@ else
             RemoteWinningPlayer = response.winningPlayer;
         });
         if (bool.Parse(Configuration["EnableRemotePlay"] ?? "false"))
+        {
             try
             {
                 await connection.StartAsync();
                 NewGameModel.RemotePlayAvailable = true;
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 NewGameModel.RemotePlayAvailable = false;
             }
         }
-
     }
 }
