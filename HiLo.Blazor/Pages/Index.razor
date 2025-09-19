@@ -2,6 +2,7 @@
 @using HiLo.DTOs
 @using Microsoft.AspNetCore.SignalR.Client;
 @inject IConfiguration Configuration
+@inject NavigationManager NavigationManager
 <PageTitle>HiLo</PageTitle>
 
 @if (ShowingNewGameDialog)
@@ -22,7 +23,7 @@ else
         <button type="button" @onclick="Higher">Higher</button>
         <button type="button" @onclick="Lower">Lower</button>
         <button type="button" @onclick="Swap" disabled="@CannotSwapCard">Swap</button>
-        <a class="button" href="help">Help &amp; Rules</a>
+        <button type="button" @onclick="Help">Help &amp; Rules</button>
     </div>
 }
 @if (ShowingMessageDialog)
@@ -281,5 +282,10 @@ else
                 NewGameModel.RemotePlayAvailable = false;
             }
         }
+    }
+
+    private void Help()
+    {
+        NavigationManager.NavigateTo("/help");
     }
 }

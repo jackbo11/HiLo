@@ -1,6 +1,8 @@
 ﻿@page "/help"
+@inject NavigationManager NavigationManager
 <PageTitle>HiLo Help</PageTitle>
 <article id="help">
+    <button type="button" @onclick="Back">&lt;</button>
     <h1>HiLo Help</h1>
     <h2>Basics</h2>
     <p>To play the game, you must guess if the next card in the row is higher or lower than the last. To win the game, you must correctly guess the final card. </p>
@@ -15,3 +17,10 @@
     <h2>Swapping</h2>
     <p>You have the option of swapping the 4th and the 8th card (the cards at the end of the first two rows).</p>
 </article>
+
+@code {
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+    }
