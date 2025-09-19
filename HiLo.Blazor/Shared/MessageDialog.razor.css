@@ -10,7 +10,7 @@
     padding: 0.5rem;
     border-radius: 2rem;
     border: 0.1rem solid white;
-    animation: show 200ms 50ms cubic-bezier(0.4, 0.6, 0.7, 1.4) forwards;
+    animation: show 200ms 50ms cubic-bezier(0.4, 0.6, 0.7, 1.2) forwards;
     opacity: 0;
     transform: translateY(-10vh);
     transform-origin: top center;
